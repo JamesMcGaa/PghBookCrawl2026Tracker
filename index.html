@@ -10,7 +10,7 @@
   html, body { margin: 0; height: 100%; font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; }
   #map { position: absolute; top: 0; bottom: 0; left: 0; right: 0; }
   .panel {
-    position: absolute; z-index: 1000; top: 12px; left: 12px;
+    position: absolute; z-index: 1000; top: 12px; right: 12px;
     background: rgba(255,255,255,0.96); padding: 12px 14px; border-radius: 10px;
     box-shadow: 0 2px 10px rgba(0,0,0,0.25); max-width: 300px; font-size: 13px;
     max-height: 88vh; overflow-y: auto;
@@ -45,15 +45,18 @@
   #btn-labels.active { background: #1769aa; border-color: #1769aa; color: #fff; }
   #close-panel { position: absolute; top: 8px; right: 8px; border: 1px solid #bbb; background: #f4f4f4;
     border-radius: 6px; width: 26px; height: 26px; font-size: 15px; line-height: 1; cursor: pointer; color: #333; }
-  #open-panel { position: absolute; z-index: 1000; top: 12px; left: 12px; display: none;
+  #open-panel { position: absolute; z-index: 1000; top: 12px; right: 12px; display: none;
     border: none; background: rgba(255,255,255,0.96); box-shadow: 0 2px 10px rgba(0,0,0,0.25);
     border-radius: 10px; padding: 8px 12px; font-size: 14px; font-weight: 600; cursor: pointer; }
+  #time-wrap { display: none; margin-top: 6px; }
+  #time-slider { width: 100%; }
+  #time-readout { font-size: 12px; font-weight: 600; color: #1769aa; margin-top: 2px; }
   .leaflet-tooltip.hours-label { background: rgba(255,255,255,0.92); border: 1px solid #999;
     border-radius: 4px; padding: 1px 5px; font-size: 11px; font-weight: 600; color: #222;
     box-shadow: 0 1px 3px rgba(0,0,0,0.2); }
   .leaflet-tooltip.hours-label.leaflet-tooltip-right::before,
   .leaflet-tooltip.hours-label.leaflet-tooltip-left::before { display: none; }
-  @media (max-width: 520px) { .panel { max-width: 78vw; font-size: 12px; } }
+  @media (max-width: 520px) { .panel { max-width: 60vw; font-size: 11px; padding: 9px 10px; } }
 </style>
 </head>
 <body>
@@ -61,11 +64,16 @@
 <div class="panel" id="panel">
   <button id="close-panel" title="Hide panel">✕</button>
   <h1>Great Pittsburgh Book Crawl 2026</h1>
-  <p class="sub">Official booklet hours (crawl ~Jul 18–26). Today's view uses your local time: past closing shows as closed, and within an hour of closing shows orange.</p>
+  <p class="sub"><a href="https://www.pghbookcrawl.com/" target="_blank">Official Book Crawl Site</a> &nbsp;·&nbsp; <a href="https://www.instagram.com/pghbookcrawl" target="_blank">Instagram</a></p>
   <div class="lbl">Day</div>
   <div class="row days" id="days"></div>
   <div class="lbl">Display</div>
   <div class="row"><button id="btn-labels" title="Show each open store's hours next to its pin">Show hours labels</button></div>
+  <label class="perk-line"><input type="checkbox" id="time-toggle"> ⏱ Preview by time</label>
+  <div id="time-wrap">
+    <input type="range" id="time-slider" min="0" max="1425" step="15">
+    <div id="time-readout"></div>
+  </div>
   <div class="legend-row" style="margin-top:10px"><span class="dot green"></span> Open <span class="count" id="c-open"></span></div>
   <div class="legend-row"><span class="dot orange"></span> Closing soon <span class="count" id="c-soon"></span></div>
   <div class="legend-row"><span class="dot red"></span> Closed <span class="count" id="c-closed"></span></div>
@@ -74,6 +82,7 @@
   <div class="lbl">Bonus perks</div>
   <label class="perk-line"><input type="checkbox" id="perk-milles"> 🍦 Free Mille's Ice Cream</label>
   <label class="perk-line"><input type="checkbox" id="perk-haven"> 🍋 Free lemonade — Haven Café</label>
+  <label class="perk-line"><input type="checkbox" id="task-submit"> 📄 Submit final page</label>
 </div>
 <div id="map"></div>
 <script>
@@ -199,7 +208,7 @@ function parseRange(hrs){
   return { open: o, close: c };
 }
 
-var state = { day: todayKey(), showLabels: true };
+var state = { day: todayKey(), showLabels: true, timeOverride: null };
 
 // ---- Visited check-offs + bonus perks, persisted in localStorage ----
 var VISIT_KEY = "pgh-book-crawl-visited-v1";
@@ -212,16 +221,24 @@ function isVisited(st){ return !!visited[slug(st.n)]; }
 function saveVisited(){ try { localStorage.setItem(VISIT_KEY, JSON.stringify(visited)); } catch (e) {} }
 function savePerks(){ try { localStorage.setItem(PERK_KEY, JSON.stringify(perks)); } catch (e) {} }
 
-// status: applies live time only when the selected day is actually today
+// which minute-of-day to use for live logic (null = show plain schedule).
+// Only the "Preview by time" slider drives time-based status; with it off,
+// every store scheduled open on the selected day shows green.
+function effectiveNow(day){
+  if (state.timeOverride != null) return state.timeOverride;
+  return null;
+}
+// status: applies live/slider time; otherwise plain scheduled open/closed
 function statusFor(store, day){
   var v = store.h[day];
   if (!v || v === "Unknown") return "unknown";
   if (v.toLowerCase().indexOf("closed") === 0) return "closed";
-  if (day === todayKey()) {
+  var now = effectiveNow(day);
+  if (now != null) {
     var r = parseRange(v);
     if (r) {
-      var now = nowMinutes();
-      if (r.close > 1440 && now < r.close - 1440) now += 1440; // early-morning tail of a past-midnight range
+      if (r.close > 1440 && now < r.close - 1440) now += 1440; // tail of a past-midnight range
+      if (now < r.open) return "closed";          // not open yet
       if (now >= r.close) return "closed";        // past closing
       if (now >= r.close - 60) return "soon";     // closing within an hour
     }
@@ -246,13 +263,21 @@ function popupHtml(st){
   var day = state.day;
   var status = statusFor(st, day);
   var hrs = st.h[day];
-  var gmaps = "https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent(st.a);
+  var gmaps = "https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent(st.n + ", " + st.a);
   var v = isVisited(st), s = slug(st.n);
   var perkLine = st.perk ? '<div class="perk">★ ' + st.perk + '</div>' : '';
   var nowNote = "";
-  if (day === todayKey() && status === "soon") nowNote = '<div class="now-note">⏳ Closing within the hour</div>';
-  else if (day === todayKey() && status === "closed" && hrs && hrs.toLowerCase().indexOf("closed") !== 0)
-    nowNote = '<div class="now-note">Closed for today (past closing time)</div>';
+  var liveNow = effectiveNow(day);
+  if (liveNow != null) {
+    var rr = parseRange(hrs);
+    if (rr) {
+      var nn = liveNow;
+      if (rr.close > 1440 && nn < rr.close - 1440) nn += 1440;
+      if (status === "soon") nowNote = '<div class="now-note">⏳ Closing within the hour</div>';
+      else if (nn < rr.open) nowNote = '<div class="now-note">Not open yet — opens ' + hrs.split(/[–-]/)[0].trim() + '</div>';
+      else if (nn >= rr.close) nowNote = '<div class="now-note">Closed (past closing time)</div>';
+    }
+  }
   return '<div class="popup-title">' + (v ? "✓ " : "") + st.n + '</div>' +
     '<span class="badge" style="background:' + colors[status] + '">' + labels[status] + ' · ' + DAYNAMES[day] + '</span>' +
     '<div class="popup-hours">' + DAYNAMES[day] + ': <b>' + hrs + '</b></div>' +
@@ -260,7 +285,7 @@ function popupHtml(st){
     '<div style="color:#555;margin-top:4px">' + st.a + '</div>' +
     perkLine +
     '<div class="src">Source: <b>Official Book Crawl booklet</b></div>' +
-    '<div style="margin-top:6px"><a href="' + gmaps + '" target="_blank">Directions ↗</a></div>' +
+    '<div style="margin-top:6px"><a href="' + gmaps + '" target="_blank">Open in Google Maps ↗</a></div>' +
     '<div class="visit-line"><label><input type="checkbox" ' + (v ? "checked" : "") +
       ' onchange="toggleVisited(\'' + s + '\')"> Visited this store</label></div>';
 }
@@ -332,6 +357,7 @@ DAYS.forEach(function(d){
     state.day = d;
     document.querySelectorAll('.days button').forEach(function(x){ x.classList.remove('active'); });
     b.classList.add('active'); render();
+    if (state.timeOverride != null) updateReadout();
   };
   daysDiv.appendChild(b);
 });
@@ -359,6 +385,25 @@ perkHaven.checked = !!perks.haven;
 perkMilles.onchange = function(){ perks.milles = this.checked; savePerks(); };
 perkHaven.onchange = function(){ perks.haven = this.checked; savePerks(); };
 
+var taskSubmit = document.getElementById('task-submit');
+taskSubmit.checked = !!perks.submit;
+taskSubmit.onchange = function(){ perks.submit = this.checked; savePerks(); };
+
+// time-preview slider
+var timeToggle = document.getElementById('time-toggle');
+var timeWrap = document.getElementById('time-wrap');
+var timeSlider = document.getElementById('time-slider');
+var timeReadout = document.getElementById('time-readout');
+function fmtMin(m){ var h = Math.floor(m / 60), mm = m % 60, ap = h < 12 ? "AM" : "PM"; var hh = h % 12; if (hh === 0) hh = 12; return hh + ":" + (mm < 10 ? "0" : "") + mm + " " + ap; }
+function updateReadout(){ timeReadout.textContent = "At " + fmtMin(parseInt(timeSlider.value, 10)) + " on " + DAYNAMES[state.day]; }
+timeSlider.value = Math.round(nowMinutes() / 15) * 15;
+timeToggle.onchange = function(){
+  if (this.checked) { state.timeOverride = parseInt(timeSlider.value, 10); timeWrap.style.display = "block"; updateReadout(); }
+  else { state.timeOverride = null; timeWrap.style.display = "none"; }
+  render();
+};
+timeSlider.oninput = function(){ state.timeOverride = parseInt(this.value, 10); updateReadout(); refreshLive(); };
+
 // closable panel (mobile)
 var panel = document.getElementById('panel');
 var openBtn = document.getElementById('open-panel');
@@ -369,7 +414,6 @@ openBtn.onclick = function(){ panel.style.display = "block"; openBtn.style.displ
 daysDiv.querySelector('button[data-day="' + state.day + '"]').classList.add('active');
 btnLabels.classList.add('active');
 render();
-setInterval(refreshLive, 60000); // keep "today" status live
 </script>
 </body>
 </html>
