@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Great Pittsburgh Book Crawl 2026 — 7-Day Map</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<style>
+  html, body { margin: 0; height: 100%; font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; }
+  #map { position: absolute; top: 0; bottom: 0; left: 0; right: 0; }
+  .panel {
+    position: absolute; z-index: 1000; top: 12px; left: 12px;
+    background: rgba(255,255,255,0.96); padding: 12px 14px; border-radius: 10px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.25); max-width: 310px; font-size: 13px;
+  }
+  .panel h1 { font-size: 15px; margin: 0 0 6px; }
+  .panel .sub { color: #555; margin: 0 0 10px; line-height: 1.35; }
+  .lbl { font-size: 11px; text-transform: uppercase; letter-spacing: .04em; color: #777; margin: 8px 0 4px; }
+  .row { display: flex; flex-wrap: wrap; gap: 4px; }
+  .row button {
+    border: 1px solid #bbb; background: #f4f4f4; border-radius: 6px; padding: 5px 8px;
+    font-size: 12px; cursor: pointer; font-weight: 600; color: #333;
+  }
+  .days button.active { background: #1769aa; border-color: #1769aa; color: #fff; }
+  .src-row button.active { background: #6a1b9a; border-color: #6a1b9a; color: #fff; }
+  .legend-row { display: flex; align-items: center; gap: 8px; margin: 3px 0; }
+  .dot { width: 13px; height: 13px; border-radius: 50%; border: 2px solid rgba(0,0,0,0.35); flex: 0 0 auto; }
+  .green { background: #2e9b3f; } .red { background: #d33; } .gray { background: #999; }
+  .count { color: #666; }
+  .popup-title { font-weight: 600; font-size: 14px; margin-bottom: 2px; }
+  .popup-hours { margin-top: 5px; font-size: 13px; }
+  .popup-hours b { font-size: 14px; }
+  .badge { display:inline-block; padding:1px 6px; border-radius:6px; color:#fff; font-size:11px; margin-right:4px; }
+  .src { margin-top: 6px; font-size: 11px; color: #555; word-break: break-all; }
+  .conf { font-size: 11px; color: #888; }
+  .alt { margin-top: 5px; font-size: 11px; color: #a15; }
+  .visit-line { margin-top: 8px; padding-top: 6px; border-top: 1px solid #eee; }
+  .visit-line label { font-size: 13px; cursor: pointer; user-select: none; font-weight: 600; }
+  .visit-line input { transform: scale(1.2); margin-right: 6px; vertical-align: middle; }
+  #reset-visited { border: 1px solid #bbb; background: #f4f4f4; border-radius: 6px; padding: 3px 8px;
+    font-size: 11px; cursor: pointer; margin-left: 8px; }
+</style>
+</head>
+<body>
+<div class="panel">
+  <h1>Great Pittsburgh Book Crawl 2026</h1>
+  <p class="sub">Pick a data source and a day. Pins recolor and each popup shows that day's <b>exact hours</b> + citation. The other source's hours appear too when they differ.</p>
+  <div class="lbl">Data source</div>
+  <div class="row src-row" id="sources"></div>
+  <div class="lbl">Day</div>
+  <div class="row days" id="days"></div>
+  <div class="legend-row" style="margin-top:10px"><span class="dot green"></span> Open <span class="count" id="c-open"></span></div>
+  <div class="legend-row"><span class="dot red"></span> Closed <span class="count" id="c-closed"></span></div>
+  <div class="legend-row"><span class="dot gray"></span> Unconfirmed <span class="count" id="c-unknown"></span></div>
+  <div class="legend-row" style="margin-top:8px"><b>Visited: <span id="c-visited">0</span>/30</b> <button id="reset-visited" title="Clear all check-offs">Reset</button></div>
+</div>
+<div id="map"></div>
+<script>
+var DAYS = ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
+var DAYNAMES = {Mon:"Monday",Tue:"Tuesday",Wed:"Wednesday",Thu:"Thursday",Fri:"Friday",Sat:"Saturday",Sun:"Sunday"};
+
+// Each store carries BOTH datasets:
+//   gem = Gemini's Google Maps hours (default)
+//   mine = my web research hours (with source url + confidence)
+var stores = [
+  {n:"Amazing Books & Records – Squirrel Hill", a:"5858 Forbes Ave, Pittsburgh 15217", lat:40.4379632, lon:-79.9208692,
+   gem:{h:{Mon:"10am–10pm",Tue:"10am–10pm",Wed:"10am–10pm",Thu:"10am–10pm",Fri:"10am–5pm",Sat:"6pm–11pm",Sun:"10am–9pm"}},
+   mine:{c:"high", u:"http://www.amazingbooksandrecords.com/hours--locations.html", h:{Mon:"10am–10pm",Tue:"10am–10pm",Wed:"10am–10pm",Thu:"10am–10pm",Fri:"10am–Sunset",Sat:"~after sunset–Midnight",Sun:"10am–9pm"}}},
+  {n:"Amazing Books & Records – Downtown", a:"320 Smithfield St, Pittsburgh 15222", lat:40.4383440, lon:-79.9996780,
+   gem:{h:{Mon:"10:30am–7pm",Tue:"10:30am–7pm",Wed:"10:30am–7pm",Thu:"10:30am–7pm",Fri:"10:30am–7pm",Sat:"11am–4pm",Sun:"11am–4pm"}},
+   mine:{c:"high", u:"http://www.amazingbooksandrecords.com/hours--locations.html", h:{Mon:"10:30am–6pm",Tue:"10:30am–6pm",Wed:"10:30am–7pm",Thu:"10am–7pm",Fri:"10am–7pm",Sat:"10am–7pm",Sun:"11am–4pm"}}},
+  {n:"All About Books TLC", a:"11 West Pike St, Canonsburg 15317", lat:40.2585974, lon:-80.1867176,
+   gem:{h:{Mon:"Closed",Tue:"10am–5pm",Wed:"10am–5pm",Thu:"10am–7pm",Fri:"10am–5pm",Sat:"10am–5pm",Sun:"Closed"}},
+   mine:{c:"med", u:"https://maps.roadtrippers.com/us/canonsburg-pa/shopping/all-about-books-with-tlc-canonsburg-pa--0", h:{Mon:"Unknown",Tue:"10am–5pm",Wed:"10am–5pm",Thu:"10am–5pm",Fri:"10am–5pm",Sat:"10am–5pm",Sun:"Unknown"}}},
+  {n:"Beyond Bedtime Books", a:"1453 Potomac Ave, Pittsburgh 15216", lat:40.3962786, lon:-80.0353597,
+   gem:{h:{Mon:"11am–4pm",Tue:"11am–4pm",Wed:"11am–4pm",Thu:"2pm–8pm",Fri:"11am–4pm",Sat:"10am–4pm",Sun:"11am–4pm"}},
+   mine:{c:"high", u:"http://www.beyondbedtimebooks.com/", h:{Mon:"11am–4pm",Tue:"11am–4pm",Wed:"11am–4pm",Thu:"2pm–8pm",Fri:"11am–4pm",Sat:"11am–4pm",Sun:"11am–4pm"}}},
+  {n:"Blythe Books & Fine Gifts", a:"2941 Brownsville Rd, Pittsburgh 15227", lat:40.3811818, lon:-79.9757427,
+   gem:{h:{Mon:"11am–3pm",Tue:"Closed",Wed:"11am–7pm",Thu:"11am–7pm",Fri:"11am–4pm",Sat:"10am–5pm",Sun:"11am–4pm"}},
+   mine:{c:"high", u:"http://www.blythebooks.com/", h:{Mon:"11am–3pm",Tue:"Closed",Wed:"11am–7pm",Thu:"11am–7pm",Fri:"11am–4pm",Sat:"10am–5pm",Sun:"11am–4pm"}}},
+  {n:"City Books", a:"908 Galveston Ave, Pittsburgh 15233", lat:40.4522986, lon:-80.0165304,
+   gem:{h:{Mon:"Closed",Tue:"Closed",Wed:"11am–5pm",Thu:"11am–5pm",Fri:"11am–5pm",Sat:"11am–5pm",Sun:"11am–5pm"}},
+   mine:{c:"high", u:"http://www.citybookspgh.com/", h:{Mon:"Closed",Tue:"Closed (by appt only)",Wed:"11am–5pm",Thu:"11am–5pm",Fri:"11am–5pm",Sat:"11am–5pm",Sun:"11am–5pm"}}},
+  {n:"City of Asylum Books", a:"40 W North Ave, Pittsburgh 15212", lat:40.4554526, lon:-80.0070839,
+   gem:{h:{Mon:"12pm–6pm",Tue:"12pm–6pm",Wed:"12pm–6pm",Thu:"12pm–6pm",Fri:"12pm–6pm",Sat:"12pm–6pm",Sun:"12pm–6pm"}},
+   mine:{c:"high", u:"https://cityofasylum.org/visit-us/", h:{Mon:"12pm–6pm",Tue:"12pm–6pm",Wed:"12pm–6pm",Thu:"12pm–6pm",Fri:"12pm–6pm",Sat:"12pm–6pm",Sun:"12pm–6pm"}}},
+  {n:"Completely Booked", a:"128 Western Ave, Irwin 15642", lat:40.3334657, lon:-79.7110600,
+   gem:{h:{Mon:"Closed",Tue:"10am–6pm",Wed:"10am–6pm",Thu:"10am–6pm",Fri:"10am–6pm",Sat:"10am–6pm",Sun:"10am–4pm"}},
+   mine:{c:"med", u:"https://www.mapquest.com/us/pennsylvania/completely-booked-424475997", h:{Mon:"10am–6pm",Tue:"10am–6pm",Wed:"10am–6pm",Thu:"10am–8pm",Fri:"10am–8pm",Sat:"10am–8pm",Sun:"10am–6pm"}}},
+  {n:"Cozy Corner Bookstore", a:"723 Filbert St, Pittsburgh 15232", lat:40.4525027, lon:-79.9334533,
+   gem:{h:{Mon:"12pm–6pm",Tue:"12pm–6pm",Wed:"12pm–6pm",Thu:"12pm–6pm",Fri:"12pm–6pm",Sat:"11am–7pm",Sun:"11am–6pm"}},
+   mine:{c:"low", u:"https://www.loc8nearme.com/pennsylvania/oakmont/book-stores/", h:{Mon:"12pm–6pm",Tue:"12pm–6pm",Wed:"12pm–6pm",Thu:"12pm–6pm",Fri:"12pm–6pm",Sat:"12pm–6pm",Sun:"12pm–6pm"}}},
+  {n:"Doomed Planet Comics & Books", a:"3138 Dobson St, Pittsburgh 15219", lat:40.4575406, lon:-79.9658578,
+   gem:{h:{Mon:"12pm–5pm",Tue:"Closed",Wed:"Closed",Thu:"12pm–5pm",Fri:"12pm–6pm",Sat:"12pm–6pm",Sun:"12pm–5pm"}},
+   mine:{c:"med", u:"https://www.instagram.com/doomedplanetcomics/", h:{Mon:"12pm–5pm",Tue:"Closed",Wed:"Closed",Thu:"12pm–5pm",Fri:"12pm–6pm",Sat:"12pm–6pm",Sun:"12pm–5pm"}}},
+  {n:"K&J Comics", a:"1017 W View Park Dr, West View 15229", lat:40.5160017, lon:-80.0383930,
+   gem:{h:{Mon:"12pm–9pm",Tue:"12pm–9pm",Wed:"12pm–9pm",Thu:"12pm–9pm",Fri:"12pm–9pm",Sat:"12pm–9pm",Sun:"12pm–5pm"}},
+   mine:{c:"high", u:"https://stores.comichub.com/kjcomics/", h:{Mon:"12pm–9pm",Tue:"12pm–9pm",Wed:"12pm–9pm",Thu:"12pm–9pm",Fri:"12pm–9pm",Sat:"12pm–9pm",Sun:"Closed"}}},
+  {n:"Kards Unlimited", a:"5522 Walnut St, Pittsburgh 15232", lat:40.4513670, lon:-79.9329155,
+   gem:{h:{Mon:"10am–8pm",Tue:"10am–8pm",Wed:"10am–8pm",Thu:"10am–8pm",Fri:"10am–8pm",Sat:"10am–8pm",Sun:"10am–5pm"}},
+   mine:{c:"high", u:"http://kardsunlimited.com/", h:{Mon:"10am–8pm",Tue:"10am–8pm",Wed:"10am–8pm",Thu:"10am–8pm",Fri:"10am–8pm",Sat:"10am–8pm",Sun:"10am–5pm"}}},
+  {n:"Little Green Bookstore", a:"104 N Main St, Zelienople 16063", lat:40.7962134, lon:-80.1371492,
+   gem:{h:{Mon:"Closed",Tue:"Closed",Wed:"11am–8pm",Thu:"11am–8pm",Fri:"11am–7pm",Sat:"9am–2pm",Sun:"Closed"}},
+   mine:{c:"low", u:"https://the-little-green-bookstore.business.site/", h:{Mon:"Unknown",Tue:"Unknown",Wed:"Unknown",Thu:"Unknown",Fri:"Unknown",Sat:"Unknown",Sun:"Unknown"}}},
+  {n:"Moden Mercantile", a:"303 8th St, New Brighton 15066", lat:40.7353154, lon:-80.3142796,
+   gem:{h:{Mon:"Closed",Tue:"12pm–6pm",Wed:"12pm–6pm",Thu:"12pm–6pm",Fri:"12pm–7pm",Sat:"10am–4pm",Sun:"10am–2pm"}},
+   mine:{c:"med", u:"https://www.globuya.com/US/New-Brighton/143202612198926/Moden-Mercantile", h:{Mon:"Closed",Tue:"12pm–6pm",Wed:"12pm–6pm",Thu:"12pm–6pm",Fri:"12pm–7pm",Sat:"10am–4pm",Sun:"10am–2pm"}}},
+  {n:"Mt. Lebanon Book Cellar", a:"16 Castle Shannon Blvd, Pittsburgh 15228", lat:40.3769518, lon:-80.0453481,
+   gem:{h:{Mon:"10am–6pm",Tue:"10am–6pm",Wed:"10am–6pm",Thu:"10am–6pm",Fri:"10am–4pm",Sat:"10am–4pm",Sun:"Closed"}},
+   mine:{c:"high", u:"https://mtlebanonlibrary.org/190/The-Book-Cellar", h:{Mon:"10am–8pm",Tue:"10am–8pm",Wed:"10am–8pm",Thu:"10am–8pm",Fri:"10am–4pm",Sat:"10am–4pm",Sun:"Closed"}}},
+  {n:"Mystery Lovers Bookshop", a:"514 Allegheny River Blvd, Oakmont 15139", lat:40.5178319, lon:-79.8426337,
+   gem:{h:{Mon:"11am–6pm",Tue:"11am–6pm",Wed:"11am–6pm",Thu:"11am–6pm",Fri:"11am–6pm",Sat:"10am–5pm",Sun:"Closed"}},
+   mine:{c:"high", u:"https://mysterylovers.com/about-us", h:{Mon:"11am–6pm",Tue:"11am–6pm",Wed:"11am–6pm",Thu:"11am–6pm",Fri:"11am–6pm",Sat:"10am–5pm",Sun:"Closed"}}},
+  {n:"Novel Breads Co.", a:"504 Pittsburgh St, Mars 16046", lat:40.6959100, lon:-80.0115793,
+   gem:{h:{Mon:"Closed",Tue:"Closed",Wed:"Closed",Thu:"10am–2pm",Fri:"10am–2pm",Sat:"10am–2pm",Sun:"Closed"}},
+   mine:{c:"high", u:"https://novelbreads.com/", h:{Mon:"Closed",Tue:"Closed",Wed:"Closed",Thu:"10am–2pm",Fri:"10am–2pm",Sat:"10am–2pm",Sun:"Closed"}}},
+  {n:"One Idea Books & Gifts", a:"244 Market St, Leechburg 15656", lat:40.6262760, lon:-79.6044790,
+   gem:{h:{Mon:"Closed",Tue:"Closed",Wed:"Closed",Thu:"4pm–7pm",Fri:"Closed",Sat:"10am–2pm",Sun:"Closed"}},
+   mine:{c:"med", u:"https://www.visitoneidea.com/", h:{Mon:"Closed",Tue:"Closed",Wed:"Closed",Thu:"4pm–7pm",Fri:"Closed",Sat:"10am–2pm",Sun:"Closed"}}},
+  {n:"Passionate Pages Bookstore", a:"4304 Butler St, Pittsburgh 15201", lat:40.4707652, lon:-79.9600760,
+   gem:{h:{Mon:"Closed",Tue:"Closed",Wed:"11am–6pm",Thu:"11am–6pm",Fri:"11am–7pm",Sat:"11am–7pm",Sun:"11am–5pm"}},
+   mine:{c:"med", u:"https://www.pressreader.com/usa/pittsburgh-post-gazette/20260315/282381226059815", h:{Mon:"Closed",Tue:"Closed",Wed:"11am–6pm",Thu:"11am–6pm",Fri:"11am–7pm",Sat:"11am–7pm",Sun:"11am–5pm"}}},
+  {n:"Penguin Bookshop", a:"417 Beaver St, Sewickley 15143", lat:40.5410858, lon:-80.1811683,
+   gem:{h:{Mon:"10am–5pm",Tue:"10am–5pm",Wed:"10am–5pm",Thu:"10am–5pm",Fri:"10am–5pm",Sat:"10am–5pm",Sun:"12pm–3pm"}},
+   mine:{c:"high", u:"https://www.penguinbookshop.com/", h:{Mon:"10am–5pm",Tue:"10am–5pm",Wed:"10am–5pm",Thu:"10am–5pm",Fri:"10am–5pm",Sat:"10am–5pm",Sun:"12pm–3pm"}}},
+  {n:"Posman Books", a:"1637 Smallman St, Pittsburgh 15222", lat:40.4500022, lon:-79.9878126,
+   gem:{h:{Mon:"11am–7pm",Tue:"11am–7pm",Wed:"11am–7pm",Thu:"11am–7pm",Fri:"11am–9pm",Sat:"10am–9pm",Sun:"10am–8pm"}},
+   mine:{c:"med", u:"https://www.visitpittsburgh.com/directory/posman-books/", h:{Mon:"11am–7pm",Tue:"11am–7pm",Wed:"11am–7pm",Thu:"11am–7pm",Fri:"10am–8pm",Sat:"10am–8pm",Sun:"11am–7pm"}}},
+  {n:"Riverstone Books – McCandless", a:"8850 Covenant Ave, Pittsburgh 15237", lat:40.5808, lon:-80.0095,
+   gem:{h:{Mon:"10am–7pm",Tue:"10am–7pm",Wed:"10am–7pm",Thu:"10am–7pm",Fri:"10am–7pm",Sat:"10am–8pm",Sun:"11am–5pm"}},
+   mine:{c:"med", u:"https://www.riverstonebookstore.com/contact", h:{Mon:"10am–8pm",Tue:"10am–8pm",Wed:"10am–8pm",Thu:"10am–8pm",Fri:"10am–8pm",Sat:"10am–8pm",Sun:"11am–5pm"}}},
+  {n:"Riverstone Books – Squirrel Hill", a:"5841 Forbes Ave, Pittsburgh 15217", lat:40.4381991, lon:-79.9213271,
+   gem:{h:{Mon:"11am–8pm",Tue:"11am–8pm",Wed:"11am–8pm",Thu:"11am–8pm",Fri:"11am–8pm",Sat:"11am–8pm",Sun:"11am–5pm"}},
+   mine:{c:"med", u:"https://www.riverstonebookstore.com/contact", h:{Mon:"10am–8pm",Tue:"10am–8pm",Wed:"10am–8pm",Thu:"10am–8pm",Fri:"10am–8pm",Sat:"10am–8pm",Sun:"11am–5pm"}}},
+  {n:"Spark Books", a:"101 Brilliant Ave, Aspinwall 15215", lat:40.4899968, lon:-79.9011593,
+   gem:{h:{Mon:"10am–5pm",Tue:"10am–5pm",Wed:"10am–5pm",Thu:"10am–5pm",Fri:"10am–5pm",Sat:"10am–5pm",Sun:"Closed"}},
+   mine:{c:"med", u:"https://www.loc8nearme.com/pennsylvania/aspinwall/spark-books/5507588/", h:{Mon:"10am–5pm",Tue:"10am–5pm",Wed:"10am–5pm",Thu:"10am–5pm",Fri:"10am–5pm",Sat:"10am–5pm",Sun:"Closed"}}},
+  {n:"Stay Gold Books", a:"1104 S Braddock Ave, Swissvale 15218", lat:40.4325713, lon:-79.8940439,
+   gem:{h:{Mon:"11am–8pm",Tue:"11am–8pm",Wed:"11am–8pm",Thu:"11am–8pm",Fri:"11am–8pm",Sat:"11am–8pm",Sun:"11am–6pm"}},
+   mine:{c:"med", u:"http://pghevents.net/locations/stay-gold-books/", h:{Mon:"Closed",Tue:"11am–6pm",Wed:"11am–6pm",Thu:"11am–6pm",Fri:"11am–6pm",Sat:"12pm–5pm",Sun:"Closed"}}},
+  {n:"The Book Deli", a:"601 E Warrington Ave, Pittsburgh 15210", lat:40.4217510, lon:-79.9972610,
+   gem:{h:{Mon:"11am–5pm",Tue:"Closed",Wed:"Closed",Thu:"Closed",Fri:"Closed",Sat:"11am–7pm",Sun:"11am–6pm"}},
+   mine:{c:"med", u:"https://thebookdeli.com/", h:{Mon:"11am–5pm",Tue:"Closed",Wed:"Closed",Thu:"Closed",Fri:"Closed",Sat:"11am–7pm",Sun:"11am–6pm"}}},
+  {n:"The Shelf Love Society", a:"4745 Butler St, Pittsburgh 15201", lat:40.4753965, lon:-79.9577753,
+   gem:{h:{Mon:"Closed",Tue:"Closed",Wed:"11am–7pm",Thu:"11am–7pm",Fri:"11am–7pm",Sat:"10am–7pm",Sun:"10am–7pm"}},
+   mine:{c:"med", u:"https://www.theshelflovesociety.com/", h:{Mon:"9am–5pm",Tue:"9am–5pm",Wed:"9am–5pm",Thu:"9am–5pm",Fri:"9am–5pm",Sat:"9am–5pm",Sun:"Closed"}}},
+  {n:"Vintage Max", a:"496 Lincoln Ave, Bellevue 15202", lat:40.4956768, lon:-80.0553185,
+   gem:{h:{Mon:"Closed",Tue:"12pm–8pm",Wed:"Closed",Thu:"Closed",Fri:"12pm–8pm",Sat:"10am–8pm",Sun:"10am–4pm"}},
+   mine:{c:"low", u:"https://www.findglocal.com/US/Bellevue/402895876241828/Vintage-Max---Books%2C-Gifts%2C-Vintage", h:{Mon:"10am–6pm",Tue:"10am–2pm",Wed:"Closed",Thu:"10am–6pm",Fri:"10am–7pm",Sat:"10am–7pm",Sun:"11am–5pm"}}},
+  {n:"White Whale Bookstore", a:"4754 Liberty Ave, Pittsburgh 15224", lat:40.4610582, lon:-79.9482134,
+   gem:{h:{Mon:"10am–8pm",Tue:"10am–8pm",Wed:"10am–8pm",Thu:"10am–8pm",Fri:"10am–8pm",Sat:"10am–8pm",Sun:"10am–8pm"}},
+   mine:{c:"med", u:"https://www.findglocal.com/US/Pittsburgh/120668671355859/White-Whale-Books-%26-Coffee", h:{Mon:"10am–7pm",Tue:"10am–7pm",Wed:"10am–7pm",Thu:"10am–7pm",Fri:"10am–7pm",Sat:"10am–7pm",Sun:"10am–7pm"}}},
+  {n:"Woolly Bear Books & Gifts", a:"31 East Main St, Carnegie 15106", lat:40.4076126, lon:-80.0866263,
+   gem:{h:{Mon:"9am–7pm",Tue:"9am–7pm",Wed:"9am–7pm",Thu:"9am–8pm",Fri:"9am–7pm",Sat:"9am–7pm",Sun:"9am–4pm"}},
+   mine:{c:"high", u:"http://woollybearbooks.com/pages/store-hours", h:{Mon:"10am–6pm",Tue:"10am–6pm",Wed:"10am–6pm",Thu:"10am–8pm",Fri:"10am–6pm",Sat:"10am–6pm",Sun:"10am–4pm"}}}
+];
+
+var colors = { open: "#2e9b3f", closed: "#d33", unknown: "#999" };
+var labels = { open: "OPEN", closed: "CLOSED", unknown: "UNCONFIRMED" };
+var SRC = { gem: "Gemini · Google Maps", mine: "My web research" };
+
+var state = { source: "gem", day: "Mon" };
+
+// ---- Visited check-offs, persisted in localStorage (keyed by a stable slug,
+// so progress survives page reloads AND future rebuilds of this HTML) ----
+var VISIT_KEY = "pgh-book-crawl-visited-v1";
+function slug(n){ return n.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, ""); }
+var visited = {};
+try { visited = JSON.parse(localStorage.getItem(VISIT_KEY) || "{}") || {}; } catch (e) { visited = {}; }
+function isVisited(st){ return !!visited[slug(st.n)]; }
+function saveVisited(){ try { localStorage.setItem(VISIT_KEY, JSON.stringify(visited)); } catch (e) {} }
+
+function hoursOf(store, source, day){ return store[source].h[day]; }
+function statusFor(store, source, day){
+  var v = hoursOf(store, source, day);
+  if (!v || v === "Unknown") return "unknown";
+  if (v.toLowerCase().indexOf("closed") === 0) return "closed";
+  return "open";
+}
+
+var map = L.map('map');
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+  maxZoom: 19, attribution: '&copy; OpenStreetMap contributors'
+}).addTo(map);
+
+var bounds = [], markers = [];
+stores.forEach(function(st){
+  bounds.push([st.lat, st.lon]);
+  var m = L.circleMarker([st.lat, st.lon], { radius: 9, color: "#000", weight: 1, fillOpacity: 0.9 }).addTo(map);
+  markers.push({ marker: m, store: st });
+});
+map.fitBounds(bounds, { padding: [40, 40] });
+
+function popupHtml(st){
+  var source = state.source, day = state.day;
+  var status = statusFor(st, source, day);
+  var hrs = hoursOf(st, source, day);
+  var gmaps = "https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent(st.a);
+  var srcCite = source === "gem"
+    ? 'Source: <b>Gemini (Google Maps)</b>'
+    : 'Source: <a href="' + st.mine.u + '" target="_blank">' + st.mine.u + '</a> <span class="conf">(' + st.mine.c + ' confidence)</span>';
+
+  // show the other source's value for the same day if it differs
+  var other = source === "gem" ? "mine" : "gem";
+  var otherHrs = hoursOf(st, other, day);
+  var altLine = (otherHrs !== hrs)
+    ? '<div class="alt">⚠ ' + (other === "gem" ? "Gemini" : "My research") + ' says: <b>' + otherHrs + '</b></div>'
+    : '';
+
+  var v = isVisited(st);
+  var s = slug(st.n);
+  return '<div class="popup-title">' + (v ? "✓ " : "") + st.n + '</div>' +
+    '<span class="badge" style="background:' + colors[status] + '">' + labels[status] + ' · ' + DAYNAMES[day] + '</span>' +
+    '<div class="popup-hours">' + DAYNAMES[day] + ': <b>' + hrs + '</b></div>' +
+    altLine +
+    '<div style="color:#555;margin-top:4px">' + st.a + '</div>' +
+    '<div class="src">' + srcCite + '</div>' +
+    '<div style="margin-top:6px"><a href="' + gmaps + '" target="_blank">Directions ↗</a></div>' +
+    '<div class="visit-line"><label><input type="checkbox" ' + (v ? "checked" : "") +
+      ' onchange="toggleVisited(\'' + s + '\')"> Visited this store</label></div>';
+}
+
+// find the marker record for a given slug
+function findBySlug(s){
+  for (var i = 0; i < markers.length; i++) { if (slug(markers[i].store.n) === s) return markers[i]; }
+  return null;
+}
+
+// toggle from a popup checkbox, persist, and refresh just that marker + counts
+window.toggleVisited = function(s){
+  if (visited[s]) { delete visited[s]; } else { visited[s] = true; }
+  saveVisited();
+  var rec = findBySlug(s);
+  if (rec) { styleMarker(rec); rec.marker.setPopupContent(popupHtml(rec.store)); }
+  updateVisitedCount();
+};
+
+function updateVisitedCount(){
+  document.getElementById('c-visited').textContent = Object.keys(visited).length;
+}
+
+// style one marker for current source/day, dimming + gold ring if visited
+function styleMarker(mm){
+  var status = statusFor(mm.store, state.source, state.day);
+  if (isVisited(mm.store)) {
+    mm.marker.setStyle({ fillColor: colors[status], color: "#b8860b", weight: 3, fillOpacity: 0.30 });
+  } else {
+    mm.marker.setStyle({ fillColor: colors[status], color: "#000", weight: 1, fillOpacity: 0.90 });
+  }
+}
+
+function render(){
+  var counts = { open:0, closed:0, unknown:0 };
+  markers.forEach(function(mm){
+    var status = statusFor(mm.store, state.source, state.day);
+    counts[status]++;
+    styleMarker(mm);
+    mm.marker.bindPopup(popupHtml(mm.store));
+  });
+  document.getElementById('c-open').textContent = "(" + counts.open + ")";
+  document.getElementById('c-closed').textContent = "(" + counts.closed + ")";
+  document.getElementById('c-unknown').textContent = "(" + counts.unknown + ")";
+  updateVisitedCount();
+}
+
+// source buttons
+var srcDiv = document.getElementById('sources');
+[["gem","Gemini (Google Maps)"],["mine","My research"]].forEach(function(pair){
+  var b = document.createElement('button');
+  b.textContent = pair[1]; b.dataset.src = pair[0];
+  b.onclick = function(){
+    state.source = pair[0];
+    document.querySelectorAll('.src-row button').forEach(function(x){ x.classList.remove('active'); });
+    b.classList.add('active'); render();
+  };
+  srcDiv.appendChild(b);
+});
+
+// day buttons
+var daysDiv = document.getElementById('days');
+DAYS.forEach(function(d){
+  var b = document.createElement('button');
+  b.textContent = d; b.dataset.day = d;
+  b.onclick = function(){
+    state.day = d;
+    document.querySelectorAll('.days button').forEach(function(x){ x.classList.remove('active'); });
+    b.classList.add('active'); render();
+  };
+  daysDiv.appendChild(b);
+});
+
+// reset all check-offs
+document.getElementById('reset-visited').onclick = function(){
+  if (!Object.keys(visited).length || confirm("Clear all visited check-offs?")) {
+    visited = {}; saveVisited(); render();
+  }
+};
+
+// defaults: Gemini source, Monday
+srcDiv.querySelector('button[data-src="gem"]').classList.add('active');
+daysDiv.querySelector('button[data-day="Mon"]').classList.add('active');
+render();
+</script>
+</body>
+</html>
