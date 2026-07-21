@@ -1,0 +1,280 @@
+{
+  "event": "The Great Pittsburgh Book Crawl 2026",
+  "source": "Official Book Crawl booklet",
+  "crawl_dates": "2026-07-18/2026-07-26",
+  "hours_notes": "Values are crawl-period hours from the official booklet. Each day is either a time-range string (e.g. \"10am–6pm\"), the literal \"Closed\", or null when the booklet did not list that day.",
+  "days_order": ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
+  "store_count": 30,
+  "stores": [
+    {
+      "name": "All About Books TLC",
+      "slug": "all-about-books-tlc",
+      "address": "11 West Pike St, Canonsburg, PA 15317",
+      "lat": 40.2585974,
+      "lon": -80.1867176,
+      "hours": {"Mon": "10am–5pm", "Tue": "10am–5pm", "Wed": "10am–5pm", "Thu": "10am–8pm", "Fri": "10am–5pm", "Sat": "10am–5pm", "Sun": "11am–4pm"},
+      "perk": "10% off with passport; free tote with $40+ purchase."
+    },
+    {
+      "name": "Amazing Books & Records – Downtown",
+      "slug": "amazing-books-records-downtown",
+      "address": "320 Smithfield St, Pittsburgh, PA 15222",
+      "lat": 40.4383440,
+      "lon": -79.9996780,
+      "hours": {"Mon": "10:30am–6pm", "Tue": "10:30am–6pm", "Wed": "10:30am–7pm", "Thu": "10:30am–7pm", "Fri": "10:30am–7pm", "Sat": "10:30am–7pm", "Sun": "10:30am–4pm"},
+      "perk": "Free used book/record (≤$10) with every 3 items purchased."
+    },
+    {
+      "name": "Amazing Books & Records – Squirrel Hill",
+      "slug": "amazing-books-records-squirrel-hill",
+      "address": "5858 Forbes Ave, Pittsburgh, PA 15217",
+      "lat": 40.4379632,
+      "lon": -79.9208692,
+      "hours": {"Mon": "10am–10pm", "Tue": "10am–10pm", "Wed": "10am–10pm", "Thu": "10am–10pm", "Fri": "10am–8:20pm", "Sat": "9:30pm–12am", "Sun": "10am–9pm"},
+      "perk": "Special crawl nights: Sat 7/18 9:40pm–12am, Sat 7/25 9:30pm–12am. Free used book/record (≤$10) per 3 items; free beer/seltzer Thu & Sat nights."
+    },
+    {
+      "name": "Beyond Bedtime Books",
+      "slug": "beyond-bedtime-books",
+      "address": "1453 Potomac Ave, Pittsburgh, PA 15216",
+      "lat": 40.3962786,
+      "lon": -80.0353597,
+      "hours": {"Mon": "11am–4pm", "Tue": "11am–4pm", "Wed": "11am–4pm", "Thu": "11am–8pm", "Fri": "11am–8pm", "Sat": "11am–4pm", "Sun": "11am–4pm"},
+      "perk": "Free tote with $25 purchase; free stickers & candy."
+    },
+    {
+      "name": "Blythe Books & Fine Gifts",
+      "slug": "blythe-books-fine-gifts",
+      "address": "2941 Brownsville Rd, Pittsburgh, PA 15227",
+      "lat": 40.3811818,
+      "lon": -79.9757427,
+      "hours": {"Mon": "11am–4pm", "Tue": "11am–4pm", "Wed": "11am–7pm", "Thu": "11am–7pm", "Fri": "11am–7pm", "Sat": "10am–7pm", "Sun": "11am–4pm"},
+      "perk": "Double loyalty points; bonus payment for books you sell during the crawl."
+    },
+    {
+      "name": "The Book Deli",
+      "slug": "the-book-deli",
+      "address": "601 E Warrington Ave, Pittsburgh, PA 15210",
+      "lat": 40.4217510,
+      "lon": -79.9972610,
+      "hours": {"Mon": "11am–5pm", "Tue": "Closed", "Wed": "Closed", "Thu": "Closed", "Fri": "Closed", "Sat": "11am–7pm", "Sun": "11am–6pm"},
+      "perk": "Grand-opening vendor market & ribbon-cutting Jul 18 at 11am."
+    },
+    {
+      "name": "City Books",
+      "slug": "city-books",
+      "address": "908 Galveston Ave, Pittsburgh, PA 15233",
+      "lat": 40.4522986,
+      "lon": -80.0165304,
+      "hours": {"Mon": "11am–5pm", "Tue": "11am–5pm", "Wed": "11am–5pm", "Thu": "11am–5pm", "Fri": "11am–5pm", "Sat": "11am–5pm", "Sun": "11am–5pm"},
+      "perk": "OPEN EVERY DAY for the crawl (regular hours: Wed–Sun). 10% off with passport."
+    },
+    {
+      "name": "City of Asylum Books",
+      "slug": "city-of-asylum-books",
+      "address": "40 W North Ave, Pittsburgh, PA 15212",
+      "lat": 40.4554526,
+      "lon": -80.0070839,
+      "hours": {"Mon": "12pm–6pm", "Tue": "12pm–6pm", "Wed": "12pm–6pm", "Thu": "12pm–6pm", "Fri": "12pm–6pm", "Sat": "12pm–6pm", "Sun": "12pm–6pm"},
+      "perk": "10% off with passport. Specializes in literature in translation & small presses."
+    },
+    {
+      "name": "Completely Booked",
+      "slug": "completely-booked",
+      "address": "128 Western Ave, Irwin, PA 15642",
+      "lat": 40.3334657,
+      "lon": -79.7110600,
+      "hours": {"Mon": "Closed", "Tue": "10am–6pm", "Wed": "10am–6pm", "Thu": "10am–6pm", "Fri": "10am–6pm", "Sat": "10am–6pm", "Sun": "10am–4pm"},
+      "perk": ""
+    },
+    {
+      "name": "Cozy Corner Bookstore",
+      "slug": "cozy-corner-bookstore",
+      "address": "723 Filbert St, Pittsburgh, PA 15232",
+      "lat": 40.4525027,
+      "lon": -79.9334533,
+      "hours": {"Mon": "12pm–6pm", "Tue": "12pm–6pm", "Wed": "12pm–6pm", "Thu": "12pm–6pm", "Fri": "12pm–6pm", "Sat": "11am–7pm", "Sun": "11am–6pm"},
+      "perk": ""
+    },
+    {
+      "name": "Doomed Planet Comics & Books",
+      "slug": "doomed-planet-comics-books",
+      "address": "3138 Dobson St #3, Pittsburgh, PA 15219",
+      "lat": 40.4575406,
+      "lon": -79.9658578,
+      "hours": {"Mon": "12pm–5pm", "Tue": "Closed", "Wed": "Closed", "Thu": "12pm–5pm", "Fri": "12pm–6pm", "Sat": "12pm–6pm", "Sun": "12pm–5pm"},
+      "perk": ""
+    },
+    {
+      "name": "K&J Comics",
+      "slug": "k-j-comics",
+      "address": "1017 W View Park Dr, West View, PA 15229",
+      "lat": 40.5160017,
+      "lon": -80.0383930,
+      "hours": {"Mon": "12pm–9pm", "Tue": "12pm–9pm", "Wed": "12pm–9pm", "Thu": "12pm–9pm", "Fri": "12pm–9pm", "Sat": "12pm–9pm", "Sun": "12pm–5pm"},
+      "perk": ""
+    },
+    {
+      "name": "Kards Unlimited",
+      "slug": "kards-unlimited",
+      "address": "5522 Walnut St, Pittsburgh, PA 15232",
+      "lat": 40.4513670,
+      "lon": -79.9329155,
+      "hours": {"Mon": "10am–8pm", "Tue": "10am–8pm", "Wed": "10am–8pm", "Thu": "10am–8pm", "Fri": "10am–8pm", "Sat": "10am–8pm", "Sun": "10am–5pm"},
+      "perk": "Free 'I ♥ My Pittsburgh Indie Bookstore' sticker with passport stamp (no purchase needed)."
+    },
+    {
+      "name": "Little Green Bookstore",
+      "slug": "little-green-bookstore",
+      "address": "104 N Main St, Zelienople, PA 16063",
+      "lat": 40.7962134,
+      "lon": -80.1371492,
+      "hours": {"Mon": "Closed", "Tue": "11am–4pm", "Wed": "Closed", "Thu": "11am–8pm", "Fri": "11am–4pm", "Sat": "9am–4pm", "Sun": "Closed"},
+      "perk": "10% off with passport."
+    },
+    {
+      "name": "Moden Mercantile",
+      "slug": "moden-mercantile",
+      "address": "303 8th St, New Brighton, PA 15066",
+      "lat": 40.7353154,
+      "lon": -80.3142796,
+      "hours": {"Mon": "9am–6pm", "Tue": "9am–6pm", "Wed": "9am–6pm", "Thu": "9am–6pm", "Fri": "9am–6pm", "Sat": "9am–4pm", "Sun": "9am–4pm"},
+      "perk": "10% off purchase with passport."
+    },
+    {
+      "name": "Mt. Lebanon Book Cellar",
+      "slug": "mt-lebanon-book-cellar",
+      "address": "16 Castle Shannon Blvd, Pittsburgh, PA 15228",
+      "lat": 40.3769518,
+      "lon": -80.0453481,
+      "hours": {"Mon": "10am–8pm", "Tue": "10am–8pm", "Wed": "10am–8pm", "Thu": "10am–8pm", "Fri": "10am–4pm", "Sat": "10am–4pm", "Sun": "1:30pm–4pm"},
+      "perk": "Inside Mt. Lebanon Public Library. Sunday 1:30–4pm is a Book Crawl EXCLUSIVE."
+    },
+    {
+      "name": "Mystery Lovers Bookshop",
+      "slug": "mystery-lovers-bookshop",
+      "address": "514 Allegheny River Blvd, Oakmont, PA 15139",
+      "lat": 40.5178319,
+      "lon": -79.8426337,
+      "hours": {"Mon": "11am–6pm", "Tue": "11am–6pm", "Wed": "11am–6pm", "Thu": "11am–6pm", "Fri": "11am–6pm", "Sat": "10am–5pm", "Sun": "Closed"},
+      "perk": ""
+    },
+    {
+      "name": "Novel Breads Co.",
+      "slug": "novel-breads-co",
+      "address": "504 Pittsburgh St, Mars, PA 16046",
+      "lat": 40.6959100,
+      "lon": -80.0115793,
+      "hours": {"Mon": "Closed", "Tue": "Closed", "Wed": "Closed", "Thu": "10am–2pm", "Fri": "10am–2pm", "Sat": "10am–2pm", "Sun": "Closed"},
+      "perk": ""
+    },
+    {
+      "name": "One Idea Books & Gifts",
+      "slug": "one-idea-books-gifts",
+      "address": "244 Market St, Leechburg, PA 15656",
+      "lat": 40.6262760,
+      "lon": -79.6044790,
+      "hours": {"Mon": "Closed", "Tue": "Closed", "Wed": "Closed", "Thu": "4pm–7pm", "Fri": "10am–2pm", "Sat": "10am–2pm", "Sun": "Closed"},
+      "perk": "10% off with passport."
+    },
+    {
+      "name": "Passionate Pages Bookstore",
+      "slug": "passionate-pages-bookstore",
+      "address": "4304 Butler St, Pittsburgh, PA 15201",
+      "lat": 40.4707652,
+      "lon": -79.9600760,
+      "hours": {"Mon": "Closed", "Tue": "Closed", "Wed": "11am–6pm", "Thu": "11am–6pm", "Fri": "11am–7pm", "Sat": "11am–7pm", "Sun": "11am–5pm"},
+      "perk": "Pittsburgh's first romance-only bookstore."
+    },
+    {
+      "name": "Penguin Bookshop",
+      "slug": "penguin-bookshop",
+      "address": "417 Beaver St, Sewickley, PA 15143",
+      "lat": 40.5410858,
+      "lon": -80.1811683,
+      "hours": {"Mon": "10am–5pm", "Tue": "10am–5pm", "Wed": "10am–5pm", "Thu": "10am–5pm", "Fri": "10am–5pm", "Sat": "10am–5pm", "Sun": "12pm–3pm"},
+      "perk": ""
+    },
+    {
+      "name": "Posman Books",
+      "slug": "posman-books",
+      "address": "1637 Smallman St, Pittsburgh, PA 15222",
+      "lat": 40.4500022,
+      "lon": -79.9878126,
+      "hours": {"Mon": "11am–7pm", "Tue": "11am–7pm", "Wed": "11am–7pm", "Thu": "11am–7pm", "Fri": "11am–8pm", "Sat": "10am–8pm", "Sun": "10am–7pm"},
+      "perk": ""
+    },
+    {
+      "name": "Riverstone Books – McCandless",
+      "slug": "riverstone-books-mccandless",
+      "address": "8850 Covenant Ave, Pittsburgh, PA 15237",
+      "lat": 40.5808,
+      "lon": -80.0095,
+      "hours": {"Mon": "10am–8pm", "Tue": "10am–8pm", "Wed": "10am–8pm", "Thu": "10am–8pm", "Fri": "10am–8pm", "Sat": "10am–8pm", "Sun": "11am–5pm"},
+      "perk": ""
+    },
+    {
+      "name": "Riverstone Books – Squirrel Hill",
+      "slug": "riverstone-books-squirrel-hill",
+      "address": "5841 Forbes Ave, Pittsburgh, PA 15217",
+      "lat": 40.4381991,
+      "lon": -79.9213271,
+      "hours": {"Mon": "10am–8pm", "Tue": "10am–8pm", "Wed": "10am–8pm", "Thu": "10am–8pm", "Fri": "10am–8pm", "Sat": "10am–8pm", "Sun": "11am–5pm"},
+      "perk": ""
+    },
+    {
+      "name": "The Shelf Love Society",
+      "slug": "the-shelf-love-society",
+      "address": "4745 Butler St, Pittsburgh, PA 15201",
+      "lat": 40.4753965,
+      "lon": -79.9577753,
+      "hours": {"Mon": "Closed", "Tue": "Closed", "Wed": "11am–7pm", "Thu": "11am–7pm", "Fri": "11am–7pm", "Sat": "10am–7pm", "Sun": "10am–7pm"},
+      "perk": "A romance-only bookstore."
+    },
+    {
+      "name": "Spark Books",
+      "slug": "spark-books",
+      "address": "101 Brilliant Ave, Aspinwall, PA 15215",
+      "lat": 40.4899968,
+      "lon": -79.9011593,
+      "hours": {"Mon": "10am–5pm", "Tue": "10am–5pm", "Wed": "10am–5pm", "Thu": "10am–5pm", "Fri": "10am–5pm", "Sat": "10am–5pm", "Sun": "Closed"},
+      "perk": "20% off one book when you visit during the crawl."
+    },
+    {
+      "name": "Stay Gold Books",
+      "slug": "stay-gold-books",
+      "address": "1104 S Braddock Ave, Swissvale, PA 15218",
+      "lat": 40.4325713,
+      "lon": -79.8940439,
+      "hours": {"Mon": "11am–8pm", "Tue": "11am–8pm", "Wed": "11am–8pm", "Thu": "11am–8pm", "Fri": "11am–8pm", "Sat": "11am–8pm", "Sun": "11am–6pm"},
+      "perk": "$5 coupon for crawlers showing a passport."
+    },
+    {
+      "name": "Vintage Max",
+      "slug": "vintage-max",
+      "address": "496 Lincoln Ave, Bellevue, PA 15202",
+      "lat": 40.4956768,
+      "lon": -80.0553185,
+      "hours": {"Mon": "10am–6pm", "Tue": "10am–6pm", "Wed": null, "Thu": "10am–6pm", "Fri": "10am–8pm", "Sat": "10am–8pm", "Sun": "10am–4pm"},
+      "perk": "'Crawl Hours' — Wednesday not listed in booklet. 10% off total purchase with passport."
+    },
+    {
+      "name": "White Whale Bookstore",
+      "slug": "white-whale-bookstore",
+      "address": "4754 Liberty Ave, Pittsburgh, PA 15224",
+      "lat": 40.4610582,
+      "lon": -79.9482134,
+      "hours": {"Mon": "10am–7pm", "Tue": "10am–7pm", "Wed": "10am–7pm", "Thu": "10am–7pm", "Fri": "10am–7pm", "Sat": "10am–7pm", "Sun": "10am–7pm"},
+      "perk": ""
+    },
+    {
+      "name": "Woolly Bear Books & Gifts",
+      "slug": "woolly-bear-books-gifts",
+      "address": "31 East Main St, Carnegie, PA 15106",
+      "lat": 40.4076126,
+      "lon": -80.0866263,
+      "hours": {"Mon": "9am–7pm", "Tue": "9am–7pm", "Wed": "9am–7pm", "Thu": "9am–8pm", "Fri": "9am–7pm", "Sat": "9am–7pm", "Sun": "9am–4pm"},
+      "perk": ""
+    }
+  ]
+}
