@@ -218,7 +218,7 @@ window.toggleVisited = function(s){
   if (visited[s]) { delete visited[s]; } else { visited[s] = true; }
   saveVisited();
   var rec = findBySlug(s);
-  if (rec) { styleMarker(rec); rec.marker.setPopupContent(popupHtml(rec.store)); }
+  if (rec) { styleMarker(rec); labelMarker(rec); rec.marker.setPopupContent(popupHtml(rec.store)); }
   updateVisitedCount();
 };
 function updateVisitedCount(){ document.getElementById('c-visited').textContent = Object.keys(visited).length; }
@@ -237,7 +237,7 @@ function styleMarker(mm){
 function labelMarker(mm){
   var status = statusFor(mm.store, state.day);
   mm.marker.unbindTooltip();
-  if (state.showLabels && status === "open") {
+  if (state.showLabels && status === "open" && !isVisited(mm.store)) {
     mm.marker.bindTooltip(mm.store.h[state.day], {
       permanent: true, direction: "right", offset: [8, 0], className: "hours-label"
     });
