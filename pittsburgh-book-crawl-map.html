@@ -38,6 +38,12 @@
   .visit-line input { transform: scale(1.2); margin-right: 6px; vertical-align: middle; }
   #reset-visited { border: 1px solid #bbb; background: #f4f4f4; border-radius: 6px; padding: 3px 8px;
     font-size: 11px; cursor: pointer; margin-left: 8px; }
+  #btn-labels.active { background: #1769aa; border-color: #1769aa; color: #fff; }
+  .leaflet-tooltip.hours-label { background: rgba(255,255,255,0.92); border: 1px solid #999;
+    border-radius: 4px; padding: 1px 5px; font-size: 11px; font-weight: 600; color: #222;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.2); }
+  .leaflet-tooltip.hours-label.leaflet-tooltip-right::before,
+  .leaflet-tooltip.hours-label.leaflet-tooltip-left::before { display: none; }
 </style>
 </head>
 <body>
@@ -46,6 +52,8 @@
   <p class="sub">Hours from the <b>official crawl booklet</b> (crawl runs ~Jul 18–26). Pick a day — pins recolor and each popup shows that day's exact hours + any passport perk.</p>
   <div class="lbl">Day</div>
   <div class="row days" id="days"></div>
+  <div class="lbl">Display</div>
+  <div class="row"><button id="btn-labels" title="Show each open store's hours next to its pin">Show hours labels</button></div>
   <div class="legend-row" style="margin-top:10px"><span class="dot green"></span> Open <span class="count" id="c-open"></span></div>
   <div class="legend-row"><span class="dot red"></span> Closed <span class="count" id="c-closed"></span></div>
   <div class="legend-row"><span class="dot gray"></span> Not listed <span class="count" id="c-unknown"></span></div>
@@ -153,7 +161,7 @@ var stores = [
 var colors = { open: "#2e9b3f", closed: "#d33", unknown: "#999" };
 var labels = { open: "OPEN", closed: "CLOSED", unknown: "NOT LISTED" };
 
-var state = { day: "Mon" };
+var state = { day: "Mon", showLabels: false };
 
 // ---- Visited check-offs, persisted in localStorage (stable slug keys, so
 // progress survives reloads AND rebuilds of this HTML) ----
@@ -218,9 +226,21 @@ function updateVisitedCount(){ document.getElementById('c-visited').textContent 
 function styleMarker(mm){
   var status = statusFor(mm.store, state.day);
   if (isVisited(mm.store)) {
-    mm.marker.setStyle({ fillColor: colors[status], color: "#b8860b", weight: 3, fillOpacity: 0.30 });
+    // visited: very faint, thin gold ring
+    mm.marker.setStyle({ fillColor: colors[status], color: "#b8860b", weight: 1, opacity: 0.35, fillOpacity: 0.10 });
   } else {
-    mm.marker.setStyle({ fillColor: colors[status], color: "#000", weight: 1, fillOpacity: 0.90 });
+    mm.marker.setStyle({ fillColor: colors[status], color: "#000", weight: 1, opacity: 1, fillOpacity: 0.90 });
+  }
+}
+
+// show/hide the hours label next to each OPEN store's dot
+function labelMarker(mm){
+  var status = statusFor(mm.store, state.day);
+  mm.marker.unbindTooltip();
+  if (state.showLabels && status === "open") {
+    mm.marker.bindTooltip(mm.store.h[state.day], {
+      permanent: true, direction: "right", offset: [8, 0], className: "hours-label"
+    });
   }
 }
 
@@ -230,6 +250,7 @@ function render(){
     var status = statusFor(mm.store, state.day);
     counts[status]++;
     styleMarker(mm);
+    labelMarker(mm);
     mm.marker.bindPopup(popupHtml(mm.store));
   });
   document.getElementById('c-open').textContent = "(" + counts.open + ")";
@@ -250,6 +271,13 @@ DAYS.forEach(function(d){
   };
   daysDiv.appendChild(b);
 });
+
+// hours-label toggle
+document.getElementById('btn-labels').onclick = function(){
+  state.showLabels = !state.showLabels;
+  this.classList.toggle('active', state.showLabels);
+  render();
+};
 
 // reset check-offs
 document.getElementById('reset-visited').onclick = function(){
