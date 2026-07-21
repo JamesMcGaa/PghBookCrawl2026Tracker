@@ -56,7 +56,20 @@
     box-shadow: 0 1px 3px rgba(0,0,0,0.2); }
   .leaflet-tooltip.hours-label.leaflet-tooltip-right::before,
   .leaflet-tooltip.hours-label.leaflet-tooltip-left::before { display: none; }
-  @media (max-width: 520px) { .panel { max-width: 60vw; font-size: 11px; padding: 9px 10px; } }
+  @media (max-width: 520px) {
+    .panel { max-width: 50vw; font-size: 10px; padding: 7px 8px; border-radius: 8px; }
+    .panel h1 { font-size: 12px; margin: 0 24px 4px 0; }
+    .panel .sub { margin: 0 0 6px; }
+    .lbl { font-size: 9px; margin: 5px 0 2px; }
+    .row button { padding: 3px 5px; font-size: 10px; }
+    .legend-row { gap: 6px; margin: 2px 0; }
+    .dot { width: 10px; height: 10px; border-width: 1px; }
+    .perk-line { font-size: 11px; margin: 2px 0; }
+    .perk-line input, .visit-line input { transform: scale(1); margin-right: 4px; }
+    .visit-line label { font-size: 11px; }
+    #close-panel { width: 22px; height: 22px; font-size: 13px; top: 6px; right: 6px; }
+    #reset-visited { padding: 2px 5px; }
+  }
 </style>
 </head>
 <body>
